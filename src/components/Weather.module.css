@@ -1,0 +1,11 @@
+.weatherLocation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: left;
+  background-color: antiquewhite;
+  color: blue;
+  height: 100%;
+  border: 1px solid black;
+  margin: 10px;
+}
