@@ -2,13 +2,16 @@ import {createBrowserRouter, createRoutesFromElements, Route} from "react-router
 import App from "../App";
 import Main from "../pages/Main.tsx";
 import NotFound from "../pages/NotFound.tsx";
-import {weatherLoader} from "../loaders/weather_loader.ts"; // import your 404 page
+import {Logout} from "../pages/Logout.tsx";
+import {Signup} from "../pages/Signup.tsx";
 
 const router = createBrowserRouter(
     createRoutesFromElements(
         <Route path="/" element={<App/>}>
-            <Route path="" element={<Main/>} loader={weatherLoader}/>
-            <Route path="*" element={<NotFound/>}/> {/* This will be your 404 page */}
+            <Route path="" element={<Main/>}/>
+            <Route path="/logout" element={<Logout/>}/>
+            <Route path="/signup" element={<Signup/>}/>
+            <Route path="*" element={<NotFound/>}/>
         </Route>
     )
 );

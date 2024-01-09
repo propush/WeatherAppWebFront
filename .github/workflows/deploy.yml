@@ -1,0 +1,49 @@
+name: Build and deploy
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ['master']
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+      - name: Prepare environment
+        run: echo 'VITE_API_BASE_URL="${{ vars.BACKEND_HOST }}"' > .env
+      - name: Build
+        run: npm run build
+      - name: Install SSH key
+        run: mkdir ~/.ssh && chmod 700 ~/.ssh && echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+
+      - name: Deploy to PROD Server
+        if: github.ref == 'refs/heads/master'
+        run: |
+          ls -la
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} "sudo chgrp -R ${{ vars.SSH_USER }} ${{ vars.SSH_PATH_MASTER }}
+          sudo rm -rf ${{ vars.SSH_PATH_MASTER }}/*"
+          scp -r -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no dist/* ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:${{ vars.SSH_PATH_MASTER }}

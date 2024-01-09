@@ -1,10 +1,10 @@
+import {Container} from '@material-ui/core';
 import {Weather} from "../components/Weather.tsx";
 
 export default function Main() {
-    return <>
-        <div>Weather</div>
-        <div>
+    return (
+        <Container>
             <Weather/>
-        </div>
-    </>;
+        </Container>
+    );
 }
