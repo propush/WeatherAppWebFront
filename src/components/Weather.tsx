@@ -5,10 +5,23 @@ import {AuthContext} from "../auth/Auth.tsx";
 import {Login} from "./Login.tsx";
 import {useContext, useEffect, useState} from "react";
 import {AddWeatherPanel} from "./AddWeatherPanel.tsx";
-import {Button, Card, CardContent, Container, Typography} from '@material-ui/core';
+import {Button, Container, Typography} from '@material-ui/core';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {Box, Stack} from "@mui/material";
+import {Box, Grid, Stack} from "@mui/material";
+import {imageBaseUrl, imageExtension} from "../loaders/env.ts";
 
+
+function WeatherImage(props: { icon: string }) {
+    return <img src={`${imageBaseUrl}${props.icon}${imageExtension}`} style={{objectFit: 'contain'}}></img>;
+}
+
+function tempToString(temp: number) {
+    let sign = "";
+    if (temp > 0) {
+        sign = "+"
+    }
+    return `${sign}${temp} C`;
+}
 
 function DrawWeatherComponents(props: { data?: WeatherDataList, onLocationChanged: () => void }) {
     const onLocationChanged = props.onLocationChanged;
@@ -45,18 +58,33 @@ function DrawWeatherComponents(props: { data?: WeatherDataList, onLocationChange
 
         return (
             <Stack direction="row" justifyContent="space-between" className={classes.weatherLocation}>
-                <Box flexGrow={1}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6">{weatherData.name} ({weatherData.sys.country}):</Typography>
-                            <Typography variant="body1">Temperature: {weatherData.main.temp} degrees
-                                Celsius</Typography>
-                            <Typography variant="body1">Feels like: {weatherData.main.feels_like} degrees
-                                Celsius</Typography>
-                            <Typography variant="body1">Weather: {weatherData.weather[0].main}</Typography>
-                        </CardContent>
-                    </Card>
+                <Box flexGrow={1} margin="10px">
+                    <Grid container direction="column">
+                        <Grid item>
+                            <Typography variant="h6">{weatherData.name} ({weatherData.sys.country})</Typography>
+                        </Grid>
+                        <Grid container direction="row" spacing={1}>
+                            <Grid item>
+                                <Typography variant="h4">{tempToString(weatherData.main.temp)}</Typography>
+                            </Grid>
+                            <Grid item>
+                                <Grid container direction="column">
+                                    <Grid item>
+                                        <Typography variant="body1">Feels
+                                            like: {tempToString(weatherData.main.feels_like)}</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <Typography variant="body1">Wind: {weatherData.wind.speed} m/s</Typography>
+                                    </Grid>
+                                    <Grid item>
+                                        <Typography variant="body1">Gust: {weatherData.wind.gust} m/s</Typography>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Grid>
                 </Box>
+                <WeatherImage icon={weatherData.weather[0].icon}/>
                 <DeleteButton/>
             </Stack>
         );
@@ -80,8 +108,6 @@ export function Weather() {
         console.log(`error: ${error}, token: ${auth.token}`);
         return auth.token === null || auth.authError !== null;
     }
-
-    console.log(`Weather data: ${data}, error: ${error}, isPending: ${isPending}, token: ${auth.token}`);
 
     useEffect(() => {
         refetch().then(() => console.log("Refetched weather data"));
