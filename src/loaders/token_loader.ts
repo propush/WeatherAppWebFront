@@ -31,6 +31,7 @@ export async function signupRequest(credentials: UserCredentials): Promise<strin
 }
 
 export async function tokenLoader(credentials: UserCredentials): Promise<string> {
+    console.log(`Fetching token for ${credentials.username}`);
     const baseUrl: string = serverBaseUrl;
     const response = await fetch(`${baseUrl}/signup/signin`, {
         method: 'POST',

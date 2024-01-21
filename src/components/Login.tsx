@@ -1,6 +1,5 @@
 import {ChangeEvent, FormEvent, useContext, useEffect, useState} from "react";
 import {AuthContext} from "../auth/Auth.tsx";
-import {useQuery} from "@tanstack/react-query";
 import classes from "./Login.module.css";
 import {tokenLoader, UserCredentials} from "../loaders/token_loader.ts";
 import {Link} from "react-router-dom";
@@ -11,20 +10,30 @@ export function Login() {
     const auth = useContext(AuthContext)!;
     const [credentials, setCredentials] = useState<UserCredentials>({username: "", password: ""});
     const [canSubmit, setCanSubmit] = useState<boolean>(true);
-    const {isPending, error, refetch} = useQuery({
-        queryKey: ["login"],
-        queryFn: () => tokenLoader(credentials),
-        enabled: false
-    });
+    // const {isPending, error, refetch} = useQuery({
+    //     queryKey: ["login", credentials],
+    //     queryFn: () => tokenLoader(credentials),
+    //     enabled: false
+    // });
+    const [isPending, setIsPending] = useState<boolean>(false);
+    const [error, setError] = useState<Error | null>(null);
 
     function handleSubmit(event: FormEvent) {
         event.preventDefault();
         console.log("Submitting credentials");
-        refetch()
-            .then((result) => {
-                console.log(`Got token: ${result.data}`);
-                auth.setToken(result.data ?? null);
+        setIsPending(true);
+        setError(null);
+        tokenLoader(credentials)
+            .catch((error) => {
+                console.error(`Error: ${error}`);
+                setError(error);
+            })
+            .then((token) => {
+                auth.setToken(token ?? null);
+            })
+            .finally(() => {
                 setCredentials(credentials => ({...credentials, password: ""}));
+                setIsPending(false);
             });
     }
 

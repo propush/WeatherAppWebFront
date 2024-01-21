@@ -1,7 +1,6 @@
 import {ChangeEvent, FormEvent, useContext, useEffect, useState} from "react";
 import {AuthContext} from "../auth/Auth.tsx";
 import {signupRequest, UserCredentials} from "../loaders/token_loader.ts";
-import {useQuery} from "@tanstack/react-query";
 import {Link, Navigate} from "react-router-dom";
 import classes from "./Signup.module.css";
 import {Box, Button, Container, TextField, Typography} from "@material-ui/core";
@@ -11,20 +10,26 @@ export function Signup() {
     const auth = useContext(AuthContext)!;
     const [credentials, setCredentials] = useState<UserCredentials>({username: "", password: ""});
     const [canSubmit, setCanSubmit] = useState<boolean>(true);
-    const {isPending, error, refetch} = useQuery({
-        queryKey: ["signup"],
-        queryFn: () => signupRequest(credentials),
-        enabled: false
-    });
+    const [isPending, setIsPending] = useState<boolean>(false);
+    const [error, setError] = useState<Error | null>(null);
 
     function handleSubmit(event: FormEvent) {
         event.preventDefault();
         console.log("Signing up");
-        refetch()
+        setIsPending(true);
+        setError(null);
+        signupRequest(credentials)
+            .catch((error) => {
+                console.error(`Error: ${error}`);
+                setError(error);
+            })
             .then((result) => {
-                console.log(`Got token: ${result.data}`);
-                const token = result.data ?? null;
-                auth.setToken(token);
+                console.log(`Got token: ${result}`);
+                auth.setToken(result ?? null);
+            })
+            .finally(() => {
+                setCredentials({username: "", password: ""});
+                setIsPending(false);
             });
     }
 
