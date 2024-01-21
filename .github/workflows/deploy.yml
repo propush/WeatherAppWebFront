@@ -46,3 +46,4 @@ jobs:
           ls -la
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} "sudo chgrp -R ${{ vars.SSH_USER }} ${{ vars.SSH_PATH_MASTER }} && sudo rm -rf ${{ vars.SSH_PATH_MASTER }}/*"
           scp -r -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no dist/* ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }}:${{ vars.SSH_PATH_MASTER }}
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} "cd weather && docker-compose up -d --build"
