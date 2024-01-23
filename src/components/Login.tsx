@@ -5,16 +5,12 @@ import {tokenLoader, UserCredentials} from "../loaders/token_loader.ts";
 import {Link} from "react-router-dom";
 import {Box, Button, TextField, Typography} from "@material-ui/core";
 import {Grid} from "@mui/material";
+import {GoogleLoginButton} from "./GoogleLoginButton.tsx";
 
 export function Login() {
     const auth = useContext(AuthContext)!;
     const [credentials, setCredentials] = useState<UserCredentials>({username: "", password: ""});
     const [canSubmit, setCanSubmit] = useState<boolean>(true);
-    // const {isPending, error, refetch} = useQuery({
-    //     queryKey: ["login", credentials],
-    //     queryFn: () => tokenLoader(credentials),
-    //     enabled: false
-    // });
     const [isPending, setIsPending] = useState<boolean>(false);
     const [error, setError] = useState<Error | null>(null);
 
@@ -72,8 +68,12 @@ export function Login() {
                         value={credentials.password}
                         onChange={credentialsChange}
                     />
-                    <Button type="button" value="Submit" onClick={handleSubmit} disabled={!canSubmit}>Login
+                    <Button type="button" value="Submit" onClick={handleSubmit} disabled={!canSubmit}>
+                        Login
                     </Button>
+                    <Box display="flex" justifyContent="center">
+                        <GoogleLoginButton setError={setError}/>
+                    </Box>
                 </Grid>
             </Box>
         </Box>

@@ -5,6 +5,7 @@ import {Link, Navigate} from "react-router-dom";
 import classes from "./Signup.module.css";
 import {Box, Button, Container, TextField, Typography} from "@material-ui/core";
 import {Grid} from "@mui/material";
+import {GoogleLoginButton} from "../components/GoogleLoginButton.tsx";
 
 export function Signup() {
     const auth = useContext(AuthContext)!;
@@ -73,8 +74,12 @@ export function Signup() {
                             value={credentials.password}
                             onChange={credentialsChange}
                         />
-                        <Button type="button" value="Submit" onClick={handleSubmit} disabled={!canSubmit}>Signup
+                        <Button type="button" value="Submit" onClick={handleSubmit} disabled={!canSubmit}>
+                            Signup
                         </Button>
+                        <Box display="flex" justifyContent="center">
+                            <GoogleLoginButton setError={setError}/>
+                        </Box>
                     </Grid>
                 </Box>
             </Box>

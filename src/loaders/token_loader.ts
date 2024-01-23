@@ -6,6 +6,8 @@ export interface UserCredentials {
     password: string;
 }
 
+export type ExternalTokenType = 'google';
+
 export async function signupRequest(credentials: UserCredentials): Promise<string> {
     const baseUrl = serverBaseUrl;
     const response = await fetch(`${baseUrl}/signup/register`, {
@@ -41,6 +43,33 @@ export async function tokenLoader(credentials: UserCredentials): Promise<string>
         body: JSON.stringify({
             login: credentials.username,
             password: credentials.password
+        })
+    });
+
+    if (!response.ok) {
+        const reason = await parseErrorReason(response);
+        console.log(`Error fetching token data: ${reason}`)
+        throw new Error(reason);
+    }
+
+    const json = await response.json() as { token: string };
+    return json.token;
+}
+
+export async function exchangeExternalToken(
+    externalToken: string | undefined,
+    externalTokenType: ExternalTokenType
+): Promise<string> {
+    console.log(`Exchanging external token`);
+    const baseUrl: string = serverBaseUrl;
+    const response = await fetch(`${baseUrl}/signup/exchange-token`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            externalToken: externalToken,
+            externalTokenType: externalTokenType
         })
     });
 
