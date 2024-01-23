@@ -1,4 +1,4 @@
-import {useContext, useEffect, useState} from "react";
+import {FormEvent, useContext, useEffect, useState} from "react";
 import classes from "./AddWeatherPanel.module.css";
 import {AuthContext} from "../auth/Auth.tsx";
 import {useQuery} from "@tanstack/react-query";
@@ -42,7 +42,13 @@ function LocationForm(props: {
     setLocationFilter: (locationFilter: string) => void,
     setLocationSearchState: (locationSearchState: LocationSearchState) => void
 }) {
-    return <Stack component="form" flexGrow={3} direction="row">
+
+    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        props.setLocationSearchState("searching");
+    }
+
+    return <Stack component="form" flexGrow={3} direction="row" onSubmit={handleSubmit}>
         <TextField type="text" placeholder="Location filter..." value={props.locationFilter} onChange={
             (event) => props.setLocationFilter(event.target.value)
         } autoFocus={true}/>
@@ -51,7 +57,7 @@ function LocationForm(props: {
             color="primary"
             startIcon={<SearchIcon/>}
             disabled={props.locationFilter.trim().length === 0}
-            onClick={() => props.setLocationSearchState("searching")}
+            type="submit"
         />
     </Stack>;
 }
