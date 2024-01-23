@@ -11,10 +11,6 @@ import {Box, Grid, Stack} from "@mui/material";
 import {imageBaseUrl, imageExtension} from "../loaders/env.ts";
 
 
-function WeatherImage(props: { icon: string }) {
-    return <img src={`${imageBaseUrl}${props.icon}${imageExtension}`} style={{objectFit: 'contain'}}></img>;
-}
-
 function tempToString(temp: number) {
     let sign = "";
     if (temp > 0) {
@@ -23,76 +19,87 @@ function tempToString(temp: number) {
     return `${sign}${temp} C`;
 }
 
-function DrawWeatherComponents(props: { data?: WeatherDataList, onLocationChanged: () => void }) {
-    const onLocationChanged = props.onLocationChanged;
+function WeatherImage(props: { icon: string }) {
+    return <img src={`${imageBaseUrl}${props.icon}${imageExtension}`} style={{objectFit: 'contain'}}></img>;
+}
 
-    function WeatherComponent(props: { location: string, weatherData: WeatherResponse }) {
-        const auth = useContext(AuthContext)!;
+function DeleteButton(props: { location: string, onLocationChanged: () => void }) {
+    const auth = useContext(AuthContext)!;
 
-        console.log("Rendering weather component", props);
-        const weatherData = props.weatherData;
-
-        function DeleteButton() {
-            const [pressedAgain, setPressedAgain] = useState<boolean>(false);
-            const handleDelete = () => {
-                if (!pressedAgain) {
-                    setPressedAgain(true);
-                    setTimeout(() => setPressedAgain(false), 2000);
-                    return;
-                }
-                deleteLocation(auth, props.location)
-                    .then(() => onLocationChanged());
-                return;
-            };
-
-            return (
-                <Button
-                    className={classes.deleteButton}
-                    onClick={handleDelete}
-                    variant="text"
-                    color={pressedAgain ? "secondary" : "primary"}
-                    startIcon={<DeleteIcon/>}
-                />
-            );
+    const [pressedAgain, setPressedAgain] = useState<boolean>(false);
+    const handleDelete = () => {
+        if (!pressedAgain) {
+            setPressedAgain(true);
+            setTimeout(() => setPressedAgain(false), 2000);
+            return;
         }
+        deleteLocation(auth, props.location)
+            .then(() => props.onLocationChanged());
+        return;
+    };
 
-        return (
-            <Stack direction="row" justifyContent="space-between" className={classes.weatherLocation}>
-                <Box flexGrow={1} margin="10px">
-                    <Grid container direction="column">
+    return (
+        <Button
+            className={classes.deleteButton}
+            onClick={handleDelete}
+            variant="text"
+            color={pressedAgain ? "secondary" : "primary"}
+            startIcon={<DeleteIcon/>}
+        />
+    );
+}
+
+
+function WeatherComponent(props: {
+    location: string,
+    weatherData: WeatherResponse,
+    onLocationChanged: () => void
+}) {
+    const weatherData = props.weatherData;
+
+    return (
+        <Stack direction="row" justifyContent="space-between" className={classes.weatherLocation}>
+            <Box flexGrow={1} margin="10px">
+                <Grid container direction="column">
+                    <Grid item>
+                        <Typography variant="h6">{weatherData.name} ({weatherData.sys.country})</Typography>
+                    </Grid>
+                    <Grid container direction="row" spacing={1}>
                         <Grid item>
-                            <Typography variant="h6">{weatherData.name} ({weatherData.sys.country})</Typography>
+                            <Typography variant="h4">{tempToString(weatherData.main.temp)}</Typography>
                         </Grid>
-                        <Grid container direction="row" spacing={1}>
-                            <Grid item>
-                                <Typography variant="h4">{tempToString(weatherData.main.temp)}</Typography>
-                            </Grid>
-                            <Grid item>
-                                <Grid container direction="column">
-                                    <Grid item>
-                                        <Typography variant="body1">Feels
-                                            like: {tempToString(weatherData.main.feels_like)}</Typography>
-                                    </Grid>
-                                    <Grid item>
-                                        <Typography variant="body1">Wind: {weatherData.wind.speed} m/s</Typography>
-                                    </Grid>
-                                    <Grid item>
-                                        <Typography variant="body1">Gust: {weatherData.wind.gust} m/s</Typography>
-                                    </Grid>
+                        <Grid item>
+                            <Grid container direction="column">
+                                <Grid item>
+                                    <Typography variant="body1">Feels
+                                        like: {tempToString(weatherData.main.feels_like)}</Typography>
+                                </Grid>
+                                <Grid item>
+                                    <Typography variant="body1">Wind: {weatherData.wind.speed} m/s</Typography>
+                                </Grid>
+                                <Grid item>
+                                    <Typography variant="body1">Gust: {weatherData.wind.gust} m/s</Typography>
                                 </Grid>
                             </Grid>
                         </Grid>
                     </Grid>
-                </Box>
-                <WeatherImage icon={weatherData.weather[0].icon}/>
-                <DeleteButton/>
-            </Stack>
-        );
-    }
+                </Grid>
+            </Box>
+            <WeatherImage icon={weatherData.weather[0].icon}/>
+            <DeleteButton location={props.location} onLocationChanged={props.onLocationChanged}/>
+        </Stack>
+    );
+}
 
+function DrawWeatherComponents(props: { data?: WeatherDataList, onLocationChanged: () => void }) {
     return <Container maxWidth="sm">
         {Object.entries(props.data ?? {}).map(([location, weatherData]) =>
-            <WeatherComponent key={location} location={location} weatherData={weatherData}/>)}
+            <WeatherComponent
+                key={location}
+                location={location}
+                weatherData={weatherData}
+                onLocationChanged={props.onLocationChanged}
+            />)}
     </Container>
 }
 
@@ -105,7 +112,6 @@ export function Weather() {
     });
 
     function needLogin() {
-        console.log(`error: ${error}, token: ${auth.token}`);
         return auth.token === null;
     }
 

@@ -4,120 +4,100 @@ import {AuthContext} from "../auth/Auth.tsx";
 import {useQuery} from "@tanstack/react-query";
 import {geoLoader, GeoResponse} from "../loaders/geo_loader.ts";
 import {saveLocation} from "../loaders/weather_loader.ts";
-import {Box, Button, List, ListItem, TextField, Typography} from '@material-ui/core';
+import {Box, Button, TextField, Typography} from '@material-ui/core';
 import AddIcon from '@mui/icons-material/Add';
 import {Grid, Stack} from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import CancelIcon from '@mui/icons-material/Cancel';
+import {GeoData} from "./GeoData.tsx";
 
 type LocationSearchState = "initial" | "entering" | "searching" | "adding" | "error";
 
-export function AddWeatherPanel(props: { onLocationChanged: () => void }) {
-    const auth = useContext(AuthContext)!;
-    const [locationSearchState, setLocationSearchState] = useState<LocationSearchState>("initial");
-    const [locationFilter, setLocationFilter] = useState<string>("");
-    const [error, setError] = useState<string | null>(null);
+function AddWeatherButton(props: {
+    setLocationSearchState: (locationSearchState: LocationSearchState) => void,
+    setLocationFilter: (locationFilter: string) => void
+}) {
+    useEffect(() => {
+        props.setLocationFilter("");
+    }, []);
+    return <Button
+        variant="contained"
+        color="primary"
+        startIcon={<AddIcon/>}
+        onClick={() => props.setLocationSearchState("entering")}
+    />;
+}
 
-    function AddWeatherButton() {
-        useEffect(() => {
-            setLocationFilter("");
-        }, []);
-        return <Button
+function CancelButton(props: { setLocationSearchState: (locationSearchState: LocationSearchState) => void }) {
+    return <Button
+        variant="contained"
+        color="secondary"
+        startIcon={<CancelIcon/>}
+        onClick={() => props.setLocationSearchState("initial")}
+    />;
+}
+
+function LocationForm(props: {
+    locationFilter: string,
+    setLocationFilter: (locationFilter: string) => void,
+    setLocationSearchState: (locationSearchState: LocationSearchState) => void
+}) {
+    return <Stack component="form" flexGrow={3} direction="row">
+        <TextField type="text" placeholder="Location filter..." value={props.locationFilter} onChange={
+            (event) => props.setLocationFilter(event.target.value)
+        } autoFocus={true}/>
+        <Button
             variant="contained"
             color="primary"
-            startIcon={<AddIcon/>}
-            onClick={() => setLocationSearchState("entering")}
-        />;
-    }
+            startIcon={<SearchIcon/>}
+            disabled={props.locationFilter.trim().length === 0}
+            onClick={() => props.setLocationSearchState("searching")}
+        />
+    </Stack>;
+}
 
-    function CancelButton() {
-        return <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<CancelIcon/>}
-            onClick={() => setLocationSearchState("initial")}
-        />;
-    }
-
-    function LocationForm() {
-        return <Stack component="form" flexGrow={3} direction="row">
-            <TextField type="text" placeholder="Location filter..." value={locationFilter} onChange={
-                (event) => setLocationFilter(event.target.value)
-            } autoFocus={true}/>
-            <Button
-                variant="contained"
-                color="primary"
-                startIcon={<SearchIcon/>}
-                disabled={locationFilter.trim().length === 0}
-                onClick={() => setLocationSearchState("searching")}
-            />
-        </Stack>;
-    }
+function LocationSearchList(props: {
+    locationFilter: string,
+    setLocationSearchState: (locationSearchState: LocationSearchState) => void,
+    setError: (error: string | null) => void,
+    onLocationChanged: () => void
+}) {
+    const auth = useContext(AuthContext)!;
+    const {isPending, error, data} = useQuery({
+        queryKey: ['geo', props.locationFilter],
+        queryFn: () => geoLoader(auth, props.locationFilter)
+    });
 
     function addLocation(geoData: GeoResponse) {
         console.log("Adding location", geoData);
-        setLocationSearchState("adding");
+        props.setLocationSearchState("adding");
         saveLocation(auth, geoData.name, geoData.country)
             .catch((error) => {
                 console.log("Caught error while adding location", error);
-                setLocationSearchState("error");
-                setError(error.message);
+                props.setLocationSearchState("error");
+                props.setError(error.message);
                 return Promise.reject(error);
             })
             .then(() => {
                 console.log("Added location", geoData);
-                setLocationSearchState("initial");
-                setError(null);
+                props.setLocationSearchState("initial");
+                props.setError(null);
                 props.onLocationChanged();
             });
     }
 
-    function LocationSearchList() {
-        const {isPending, error, data} = useQuery({
-            queryKey: ['geo', locationFilter],
-            queryFn: () => geoLoader(auth, locationFilter)
-        });
 
-        function DisplayGeoData(props: { data: GeoResponse[] }) {
-            const data = props.data;
+    return <Box>
+        {isPending && <Typography>Loading...</Typography>}
+        {error && <Typography className={classes.error}>{error.message}</Typography>}
+        {data && <GeoData data={data} addLocation={addLocation}/>}
+    </Box>;
+}
 
-            function GeoDataElement(props: { geoData: GeoResponse }) {
-                const geoData = props.geoData;
-                return (
-                    <ListItem
-                        button
-                        onClick={() => addLocation(geoData)}
-                    >
-                        <Typography variant="body1">
-                            {geoData.name}
-                        </Typography>&nbsp;
-                        <Typography variant="body2" color="textSecondary">
-                            {geoData.state}, {geoData.country}
-                        </Typography>
-                    </ListItem>
-                );
-            }
-
-            if (data.length === 0) {
-                return <Typography>No locations found.</Typography>;
-            }
-
-            return (
-                <Stack direction="column" className={classes.geoDataContainer} justifyContent="space-between">
-                    <Typography align="center" variant="subtitle2">Found {data.length} location(s):</Typography>
-                    <List>
-                        {data.map((geoData, index) => <GeoDataElement key={index} geoData={geoData}/>)}
-                    </List>
-                </Stack>
-            );
-        }
-
-        return <Box>
-            {isPending && <Typography>Loading...</Typography>}
-            {error && <Typography className={classes.error}>{error.message}</Typography>}
-            {data && <DisplayGeoData data={data}/>}
-        </Box>;
-    }
+export function AddWeatherPanel(props: { onLocationChanged: () => void }) {
+    const [locationSearchState, setLocationSearchState] = useState<LocationSearchState>("initial");
+    const [locationFilter, setLocationFilter] = useState<string>("");
+    const [error, setError] = useState<string | null>(null);
 
     return (
         <Grid
@@ -128,15 +108,23 @@ export function AddWeatherPanel(props: { onLocationChanged: () => void }) {
         >
             <Grid item>
                 <Stack direction="row" alignItems="start" spacing={2}>
-                    {locationSearchState == "initial" && <AddWeatherButton/>}
-                    {locationSearchState == "entering" && <LocationForm/>}
-                    {locationSearchState == "searching" && <LocationSearchList/>}
+                    {locationSearchState == "initial" &&
+                        <AddWeatherButton setLocationSearchState={setLocationSearchState}
+                                          setLocationFilter={setLocationFilter}/>}
+                    {locationSearchState == "entering" &&
+                        <LocationForm locationFilter={locationFilter} setLocationFilter={setLocationFilter}
+                                      setLocationSearchState={setLocationSearchState}/>}
+                    {locationSearchState == "searching" &&
+                        <LocationSearchList locationFilter={locationFilter}
+                                            setLocationSearchState={setLocationSearchState}
+                                            setError={setError}
+                                            onLocationChanged={props.onLocationChanged}/>}
                     {locationSearchState == "adding" && <Typography>Adding location...</Typography>}
                     {locationSearchState == "error" && <Typography className={classes.error}>{error}</Typography>}
                 </Stack>
             </Grid>
-            {locationSearchState != "initial" && <Grid item marginLeft="10px"><CancelButton/></Grid>}
+            {locationSearchState != "initial" &&
+                <Grid item marginLeft="10px"><CancelButton setLocationSearchState={setLocationSearchState}/></Grid>}
         </Grid>
     );
 }
-

@@ -14,7 +14,7 @@ export const useAuth = (): AuthType => {
             console.log('Deleting token');
             localStorage.removeItem('token');
         } else {
-            console.log('Token updated:', token);
+            console.log('Token updated');
             localStorage.setItem('token', token);
         }
     }, [token]);

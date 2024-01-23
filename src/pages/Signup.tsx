@@ -24,7 +24,7 @@ export function Signup() {
                 setError(error);
             })
             .then((result) => {
-                console.log(`Got token: ${result}`);
+                console.log(`Got token`);
                 auth.setToken(result ?? null);
             })
             .finally(() => {

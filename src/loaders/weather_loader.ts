@@ -113,7 +113,6 @@ export async function saveLocation(auth: AuthType, city: string, country: string
     }
 
     const weatherData = await response.json() as UserWeatherResponse;
-    console.log(`Fetched weather data for ${weatherData.login}`);
     return weatherData;
 }
 
@@ -139,12 +138,10 @@ export async function deleteLocation(auth: AuthType, location: string): Promise<
     }
 
     const weatherData = await response.json() as UserWeatherResponse;
-    console.log(`Fetched weather data for ${weatherData.login}`);
     return weatherData;
 }
 
 export async function weatherLoader(auth: AuthType): Promise<WeatherDataList> {
-    console.log("In weather loader");
     const weatherDataList = await fetchWeatherDataOwnBackend(auth);
     return weatherDataList.weatherResponseMap;
 }
