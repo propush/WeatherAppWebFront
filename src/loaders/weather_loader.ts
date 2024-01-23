@@ -79,10 +79,8 @@ export async function fetchWeatherDataOwnBackend(auth: AuthType): Promise<UserWe
     if (!response.ok) {
         const reason = await parseErrorReason(response);
         console.log(`Error fetching weather data: ${reason}`)
-        auth?.setAuthError({status: response.status, message: reason});
         throw new Error(reason);
     }
-    auth?.setAuthError(null);
 
     const weatherData = await response.json() as UserWeatherResponse;
     console.log(`Fetched weather data for ${weatherData.login}`);

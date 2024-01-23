@@ -22,7 +22,6 @@ export async function geoLoader(auth: AuthType, locationFilter: string): Promise
         console.log(`Error fetching geo data: ${reason}`)
         throw new Error(reason);
     }
-    auth?.setAuthError(null);
 
     const geo: Array<GeoResponse> = await response.json();
     console.log(`Geo: ${JSON.stringify(geo)}`);

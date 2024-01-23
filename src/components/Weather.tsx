@@ -106,7 +106,7 @@ export function Weather() {
 
     function needLogin() {
         console.log(`error: ${error}, token: ${auth.token}`);
-        return auth.token === null || auth.authError !== null;
+        return auth.token === null;
     }
 
     useEffect(() => {
