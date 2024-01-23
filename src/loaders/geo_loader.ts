@@ -5,7 +5,7 @@ import {serverBaseUrl} from "./env.ts";
 export interface GeoResponse {
     name: string;
     country: string;
-    state: string;
+    state: string | null;
 }
 
 export async function geoLoader(auth: AuthType, locationFilter: string): Promise<Array<GeoResponse>> {

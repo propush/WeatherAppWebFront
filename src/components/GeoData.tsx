@@ -17,7 +17,7 @@ function GeoDataElement(props: {
                 {geoData.name}
             </Typography>&nbsp;
             <Typography variant="body2" color="textSecondary">
-                {geoData.state}, {geoData.country}
+                {geoData.country} {geoData.state && geoData.state}
             </Typography>
         </ListItem>
     );
